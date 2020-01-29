@@ -1,2 +1,2 @@
-# logistics-system
-A simple logistics management system.
+# express-system
+A simple express management system.
