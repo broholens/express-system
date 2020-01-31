@@ -1,59 +1,77 @@
-from flask import Flask, request
-from flask_sqlalchemy import SQLAlchemy
+"""
+TODO:
+1. 数据库密码从env中获取
+2. import-express-price仅支持insert
+"""
+import os
 
-from config import DB_NAME, EXPRESS_PRICE_TABLE, INIT_DB_SQL
+from flask import Flask, request, make_response, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug import secure_filename
+
+from config import EXPRESS_PRICE_TABLE, EXPRESS_PRICE_HEADER, UPLOAD_FOLDER, INIT_DB_SQL
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://root:Changeme_123@localhost:3306'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Changeme_123@localhost:3306'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
+db.session.execute(INIT_DB_SQL)
+db.session.commit()
 
-def init_db():
-    db.session.execute(INIT_DB_SQL)
-    db.session.execute(f'USE {DB_NAME};')
-    db.session.commit()
+class ExpressPrice(db.Model):
+    __tablename__ = EXPRESS_PRICE_TABLE
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    from_ = db.Column(db.String(16), nullable=False, index=True)
+    to_ = db.Column(db.String(16), nullable=False, index=True)
+    name = db.Column(db.String(80), nullable=False, index=True)
+    price_formula = db.Column(db.String(40), default='X')
+    remarks = db.Column(db.Text)
 
-init_db()
-
-EXPRESS_PRICE_HEADER = ['from_', 'to_', 'express_name', 'price_formula', 'remarks']
 def load_excel_rows(file_path):
     import pandas
     data = pandas.read_excel(file_path, names=EXPRESS_PRICE_HEADER)
     for _, row in data.iterrows():
-        yield row.values
+        yield row
 
 def _import_express_price(file_path):
     for row in load_excel_rows(file_path):
-        sql = f'INSERT INTO {EXPRESS_PRICE_TABLE} SET '
-        for key, value in zip(EXPRESS_PRICE_HEADER, row):
-            sql += f'{key}="{value}",'
-        sql = sql.rstrip(',') + ';'
-        db.session.execute(sql)
+        db.session.add(ExpressPrice(**row))
     db.session.commit()
 
-@app.route('/import-express-price')
+@app.route('/import-express-price', methods=['POST'])
 def import_express_price():
-    _import_express_price('C:\\Users\\Bigshuai-Liu\\Desktop\\py\\logistics-system\\utils\\express_price.xlsx')
-    return 'ok'
+    express_price_file = request.files.get('file')
+    if not express_price_file:
+        return make_response('No file found.', 400)
+    filename = secure_filename(express_price_file.filename)
+    tmp_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    express_price_file.save(tmp_file)
+    _import_express_price(tmp_file)
+    return make_response('Import express success.', 200)
 
-@app.route('/query')
+@app.route('/query', methods=['POST'])
 def query():
-    if request.method == 'GET':
-        from_ = request.args.get('from_')
-        to_ = request.args.get('to_')
-        weight = request.args.get('weight')
-    else:
-        from_ = request.form.get('from_')
-        to_ = request.form.get('to_')
-        weight = request.form.get('weight')
-    keys = ','.join(EXPRESS_PRICE_HEADER).strip(',')
-    query_sql = f'select {keys} from {EXPRESS_PRICE_TABLE} where from_="{from_}" and to_="{to_}";'
-    for item in db.session.execute(query_sql):
-        price_formula = item[3].replace('X', str(weight))
+    from_ = request.form.get('from_')
+    to_ = request.form.get('to_')
+    weight = request.form.get('weight')
+    data_set = ExpressPrice.query.filter(ExpressPrice.from_ == from_, ExpressPrice.to_ == to_).all()
+    result = []
+    for data in data_set:
+        price_formula = data.price_formula.replace('X', str(weight))
         total_price = round(eval(price_formula), 2)
-        print(item[:3], weight, price_formula, total_price, item[-1])
-    return 'ok'
+        result.append({
+            'from_': data.from_,
+            'to_': data.to_,
+            'weight': weight,
+            'price_formula': price_formula,
+            'total_price': total_price,
+            'remarks': data.remarks
+        })
+    return jsonify({'express_list': result})
+
 
 if __name__ == '__main__':
+    db.create_all()
     app.run()
