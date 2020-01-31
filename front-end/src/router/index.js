@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import HelloWorld from '@/components/HelloWorld'
+import QueryPrice from '@/components/QueryPrice'
 import ImportExpressPrice from '@/components/ImportExpressPrice'
 
 Vue.use(Router)
@@ -8,9 +8,9 @@ Vue.use(Router)
 export default new Router({
   routes: [
     {
-      path: '/',
-      name: 'HelloWorld',
-      component: HelloWorld
+      path: '/query-price',
+      name: 'QueryPrice',
+      component: QueryPrice
     },
     {
       path: '/import-express-price',

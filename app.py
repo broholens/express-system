@@ -64,7 +64,7 @@ def import_express_price():
 def query():
     from_ = request.form.get('from_')
     to_ = request.form.get('to_')
-    weight = request.form.get('weight')
+    weight = float(request.form.get('weight'))
     data_set = ExpressPrice.query.filter(ExpressPrice.from_ == from_, ExpressPrice.to_ == to_).all()
     result = []
     for data in data_set:
@@ -81,7 +81,20 @@ def query():
             'total_price': total_price,
             'remarks': data.remarks
         })
-    return jsonify({'express_list': result})
+    return jsonify({'expressList': result})
+
+@app.route('/countries', methods=['GET'])
+def get_countries():
+    data_set = db.session.query(ExpressPrice.from_, ExpressPrice.to_).all()
+    result = []
+    for data in data_set:
+        result.extend(data)
+    # result = [
+    #     {'value': data}
+    #     for data in set(result)
+    # ]
+    # return jsonify({'countries': result})
+    return jsonify({'countries': list(set(result))})
 
 
 if __name__ == '__main__':
