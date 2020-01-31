@@ -1,18 +1,19 @@
 """
 TODO:
 1. 数据库密码从env中获取
-2. import-express-price仅支持insert
 """
 import os
 
 from flask import Flask, request, make_response, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug import secure_filename
+from flask_cors import CORS
 
 from config import EXPRESS_PRICE_TABLE, EXPRESS_PRICE_HEADER, UPLOAD_FOLDER, INIT_DB_SQL
 
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Changeme_123@localhost:3306'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -37,7 +38,15 @@ def load_excel_rows(file_path):
 
 def _import_express_price(file_path):
     for row in load_excel_rows(file_path):
-        db.session.add(ExpressPrice(**row))
+        data = ExpressPrice.query.filter(
+            ExpressPrice.from_ == row['from_'],
+            ExpressPrice.to_ == row['to_'],
+            ExpressPrice.name == row['name'],
+            ExpressPrice.price_formula == row['price_formula'],
+            ExpressPrice.remarks == row['remarks']
+        ).first()
+        if not data:
+            db.session.add(ExpressPrice(**row))
     db.session.commit()
 
 @app.route('/import-express-price', methods=['POST'])
@@ -61,11 +70,14 @@ def query():
     for data in data_set:
         price_formula = data.price_formula.replace('X', str(weight))
         total_price = round(eval(price_formula), 2)
+        price = round(total_price / weight, 2)
         result.append({
             'from_': data.from_,
             'to_': data.to_,
             'weight': weight,
             'price_formula': price_formula,
+            'price': price,
+            'currency': 'RMB',
             'total_price': total_price,
             'remarks': data.remarks
         })
