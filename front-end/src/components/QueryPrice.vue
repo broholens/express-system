@@ -4,6 +4,7 @@
       <el-col :span="8">
         <el-autocomplete
           class="inline-input"
+          clearable="true"
           v-model="from_"
           :fetch-suggestions="querySearch"
           placeholder="始发地"
@@ -13,6 +14,7 @@
       <el-col :span="8">
         <el-autocomplete
           class="inline-input"
+          clearable="true"
           v-model="to_"
           :fetch-suggestions="querySearch"
           placeholder="目的地"
@@ -20,13 +22,16 @@
         ></el-autocomplete>
       </el-col>
       <el-col :span="8">
-        <el-input class="inline-input" v-model="weight" placeholder="重量"></el-input>
+        <el-input class="inline-input" clearable="true" v-model="weight" placeholder="重量"></el-input>
       </el-col>
     </el-row>
     <br>
     <el-button type="primary" icon="el-icon-search" @click="query">查询</el-button>
     <br>
+    <br>
     <el-table
+        v-if="seen"
+        align="center"
         :data="queriedData"
         style="width: 100%"
         :default-sort = "{prop: 'price', order: 'descending'}"
@@ -39,12 +44,12 @@
         <el-table-column
           prop="to_"
           label="目的地"
-          width="180">
+          width="90">
         </el-table-column>
         <el-table-column
           prop="weight"
           label="重量(KG)"
-          width="180">
+          width="90">
         </el-table-column>
         <el-table-column
           prop="price_formula"
@@ -55,23 +60,23 @@
           prop="total_price"
           label="总价"
           sortable
-          width="180">
+          width="160">
         </el-table-column>
         <el-table-column
           prop="price"
           label="换算后单价"
           sortable
-          width="180">
+          width="160">
         </el-table-column>
         <el-table-column
           prop="currency"
           label="币种"
-          width="180">
+          width="80">
         </el-table-column>
         <el-table-column
           prop="remarks"
           label="备注"
-          width="180">
+          width="240">
         </el-table-column>
       </el-table>
   </div>
@@ -88,7 +93,8 @@
         from_: '',
         to_: '',
         weight: '',
-        queriedData: []
+        queriedData: [],
+        seen: false
       };
     },
     methods: {
@@ -119,6 +125,7 @@
         }
         axios.post('http://localhost:5000/query', qs.stringify(params)).then((response) => {
           if (response.status === 200) {
+            self.seen = true;
             self.queriedData = response.data.expressList;
           }
         })

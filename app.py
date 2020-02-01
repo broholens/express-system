@@ -95,7 +95,6 @@ def get_countries():
         for data in set(result)
     ]
     return jsonify({'countries': result})
-    # return jsonify({'countries': list(set(result))})
 
 
 if __name__ == '__main__':
