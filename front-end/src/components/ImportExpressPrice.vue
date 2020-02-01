@@ -41,13 +41,11 @@
         axios.post('http://localhost:5000/import-express-price', fileFormData, requestConfig).then((response) => {
           this.ready = true;
           this.loading = false;
-          if (response.status == 200) {
+          if (response.status === 200) {
             this.$message({
               message: '操作成功',
               type: 'success'
             })
-          } else {
-            this.$message.error(response.data)
           }
         })
         this.ready = false;

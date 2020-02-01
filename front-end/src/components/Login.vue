@@ -27,19 +27,20 @@
         let params = new FormData();
         params.append('username', this.username);
         params.append('password', sha256(this.password));
-        console.log(sha256(this.password));
         axios.post('http://localhost:5000/login', params)
         .then((response) => {
-          if (response.status === '401') {
-            self.$message.error(response.data)
-          }else {
-            this.$message({
-              type: "success",
-              message: "OK"
-            });
-            console.log("ok")
-            // self.$router.push("/main");
+          console.log(response.data);
+          if (response.status === 200) {
+            self.$cookies.remove("token")
+            self.$cookies.set("token", response.data.token);
+            self.$router.push("/home");
           }
+        })
+        .catch(function (error) {
+          self.$message({
+            message: '用户名或密码错误!',
+            type: 'error'
+          })
         })
       },
     }

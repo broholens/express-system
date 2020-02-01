@@ -174,7 +174,7 @@ def query():
     from_ = request.form.get('from_')
     to_ = request.form.get('to_')
     weight = float(request.form.get('weight'))
-    data_set = ExpressPrice.query.filter(ExpressPrice.from_ == from_, ExpressPrice.to_ == to_).all()
+    data_set = ExpressPrice.query.filter_by(from_=from_, to_=to_).all()
     result = []
     for data in data_set:
         price_formula = data.price_formula.replace('X', str(weight))
