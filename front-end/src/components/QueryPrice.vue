@@ -23,7 +23,57 @@
         <el-input class="inline-input" v-model="weight" placeholder="重量"></el-input>
       </el-col>
     </el-row>
+    <br>
     <el-button type="primary" icon="el-icon-search" @click="query">查询</el-button>
+    <br>
+    <el-table
+        :data="queriedData"
+        style="width: 100%"
+        :default-sort = "{prop: 'price', order: 'descending'}"
+        >
+        <el-table-column
+          prop="name"
+          label="运输渠道"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="to_"
+          label="目的地"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="weight"
+          label="重量(KG)"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="price_formula"
+          label="价格公式"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="total_price"
+          label="总价"
+          sortable
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="price"
+          label="换算后单价"
+          sortable
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="currency"
+          label="币种"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="remarks"
+          label="备注"
+          width="180">
+        </el-table-column>
+      </el-table>
   </div>
 </template>
 <script>
@@ -37,7 +87,8 @@
         countries: [],
         from_: '',
         to_: '',
-        weight: ''
+        weight: '',
+        queriedData: []
       };
     },
     methods: {
@@ -53,10 +104,11 @@
         };
       },
       handleFrom(item) {
-        this.from_ = item;
+        // 要带value, [Vue warn]: Invalid prop: type check failed for prop "value". Expected String, get object.
+        this.from_ = item.value;
       },
       handleTo(item) {
-        this.to_ = item;
+        this.to_ = item.value;
       },
       query() {
         let self = this;
@@ -67,24 +119,17 @@
         }
         axios.post('http://localhost:5000/query', qs.stringify(params)).then((response) => {
           if (response.status === 200) {
-            console.log(response.data.expressList)
+            self.queriedData = response.data.expressList;
           }
         })
       }
     },
     mounted() {
-      // let self = this;
+      let self = this;
       axios.get('http://localhost:5000/countries').then((response) => {
         if (response.status === 200) {
           // 自动补全的返回值里面必须包含value
-          // var respCountries = response.data.countries;
-          // console.log(respCountries);
-          // var countries = [];
-          // for (var i in respCountries) {
-          //   countries.push({"value": respCountries[i]});
-          // }
-          // console.log(countries);
-          this.countries = response.data.countries;
+          self.countries = response.data.countries;
         }
       })
     }

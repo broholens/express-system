@@ -72,6 +72,7 @@ def query():
         total_price = round(eval(price_formula), 2)
         price = round(total_price / weight, 2)
         result.append({
+			'name': data.name,
             'from_': data.from_,
             'to_': data.to_,
             'weight': weight,
@@ -89,12 +90,12 @@ def get_countries():
     result = []
     for data in data_set:
         result.extend(data)
-    # result = [
-    #     {'value': data}
-    #     for data in set(result)
-    # ]
-    # return jsonify({'countries': result})
-    return jsonify({'countries': list(set(result))})
+    result = [
+        {'value': data}
+        for data in set(result)
+    ]
+    return jsonify({'countries': result})
+    # return jsonify({'countries': list(set(result))})
 
 
 if __name__ == '__main__':
