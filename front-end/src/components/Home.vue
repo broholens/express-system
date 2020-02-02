@@ -3,17 +3,14 @@
     <el-col :span="4">
       <h5>菜单</h5>
       <el-menu
-        default-active="1"
-        class="el-menu-vertical-demo"
-        @open="handleOpen"
-        @close="handleClose">
-        <el-menu-item index="1" @click="toImportExpressPrice">
-          <i class="el-icon-circle-plus-outline"></i>
-          <span slot="title">导入价格</span>
-        </el-menu-item>
-        <el-menu-item index="2" @click="toQueryPrice">
+        class="el-menu-vertical-demo">
+        <el-menu-item index="1" @click="toQueryPrice">
           <i class="el-icon-search"></i>
           <span slot="title">查询价格</span>
+        </el-menu-item>
+        <el-menu-item v-if="isAdmin" index="2" @click="toImportExpressPrice">
+          <i class="el-icon-circle-plus-outline"></i>
+          <span slot="title">导入价格</span>
         </el-menu-item>
         <el-menu-item index="3" disabled>
           <i class="el-icon-setting"></i>
@@ -27,7 +24,9 @@
 <script>
   export default {
     data() {
-      return {}
+      return {
+        isAdmin: this.$store.state.isAdmin
+      }
     },
     methods: {
       toImportExpressPrice() {
