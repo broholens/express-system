@@ -6,13 +6,12 @@
       :before-upload="beforeUpload"
       :http-request="submitUpload"
       :limit="1">
-      <i v-if="ready" class="el-icon-circle-plus-outline"></i>
-      <i v-if="loading" class="el-icon-loading"></i>
+      <h2 v-if="ready" class="el-icon-circle-plus-outline"></h2>
+      <h2 v-if="loading" class="el-icon-loading"></h2>
     </el-upload>
   </div>
 </template>
 <script>
-  import axios from 'axios'
   import { Message } from 'element-ui'
 
   export default {
@@ -38,7 +37,7 @@
         let requestConfig = {
           headers: {'Content-Type': 'multipart/form-data'}
         }
-        axios.post('http://localhost:5000/import-express-price', fileFormData, requestConfig).then((response) => {
+        this.$axios.post('http://localhost:5000/import-express-price', fileFormData, requestConfig).then((response) => {
           this.ready = true;
           this.loading = false;
           if (response.status === 200) {
