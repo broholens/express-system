@@ -12,8 +12,9 @@
 
 <script>
   import sha256 from 'js-sha256'
-  import axios from 'axios'
   import { Message } from 'element-ui'
+  import { mapMutations } from 'vuex'
+
   export default {
     data() {
       return {
@@ -22,17 +23,20 @@
       };
     },
     methods: {
+      ...mapMutations([
+      				'setRole',
+              'changeToken'
+      			]),
       submitForm() {
         let self = this;
         let params = new FormData();
         params.append('username', this.username);
         params.append('password', sha256(this.password));
-        axios.post('http://localhost:5000/login', params)
+        this.$axios.post('http://localhost:5000/login', params)
         .then((response) => {
-          console.log(response.data);
           if (response.status === 200) {
-            self.$cookies.remove("token")
-            self.$cookies.set("token", response.data.token);
+            self.changeToken(response.headers['token']);
+            self.setRole(response.data.isAdmin);
             self.$router.push("/home");
           }
         })
