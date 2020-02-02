@@ -4,7 +4,7 @@
       <el-col :span="8">
         <el-autocomplete
           class="inline-input"
-          clearable="true"
+          clearable
           v-model="from_"
           :fetch-suggestions="querySearch"
           placeholder="始发地"
@@ -14,7 +14,7 @@
       <el-col :span="8">
         <el-autocomplete
           class="inline-input"
-          clearable="true"
+          clearable
           v-model="to_"
           :fetch-suggestions="querySearch"
           placeholder="目的地"
@@ -22,7 +22,7 @@
         ></el-autocomplete>
       </el-col>
       <el-col :span="8">
-        <el-input class="inline-input" clearable="true" v-model="weight" placeholder="重量"></el-input>
+        <el-input class="inline-input" clearable v-model="weight" placeholder="重量"></el-input>
       </el-col>
     </el-row>
     <br>
@@ -82,7 +82,6 @@
   </div>
 </template>
 <script>
-  import axios from 'axios'
   import qs from 'qs'
   import { Message } from 'element-ui'
 
@@ -123,7 +122,7 @@
           "to_": this.to_,
           "weight": this.weight
         }
-        axios.post('http://localhost:5000/query', qs.stringify(params)).then((response) => {
+        this.$axios.post('http://localhost:5000/query', qs.stringify(params)).then((response) => {
           if (response.status === 200) {
             self.seen = true;
             self.queriedData = response.data.expressList;
@@ -133,7 +132,7 @@
     },
     mounted() {
       let self = this;
-      axios.get('http://localhost:5000/countries').then((response) => {
+      this.$axios.get('http://localhost:5000/countries').then((response) => {
         if (response.status === 200) {
           // 自动补全的返回值里面必须包含value
           self.countries = response.data.countries;
