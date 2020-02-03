@@ -6,44 +6,41 @@ import os
 import secrets
 import functools
 
-from pymemcache.client.base import Client
-from flask import Flask, request, make_response, jsonify, current_app, session, abort, g
-from flask_login import login_user, login_required, logout_user, current_user, UserMixin, AnonymousUserMixin, LoginManager
+# from pymemcache.client.base import Client
+from flask import Flask, request, make_response, jsonify, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired
 from werkzeug import secure_filename, generate_password_hash, check_password_hash
 from flask_cors import CORS
+from flask_httpauth import HTTPTokenAuth
 
-from config import EXPRESS_PRICE_HEADER, UPLOAD_FOLDER, INIT_DB_SQL, EXPIRE_TIME
+from config import EXPRESS_PRICE_HEADER, UPLOAD_FOLDER, EXPIRE_TIME
 
 
-mc_client = Client(('localhost', 11211))
+# auth = HTTPTokenAuth(scheme='JWT')
+# mc_client = Client(('localhost', 11211))
 app = Flask(__name__)
-CORS(app, supports_credentials=True, allow_headers='*', expose_headers='token', origins='http://localhost:8080')
+# origin不能写为127.0.0.1
+CORS(app, supports_credentials=True, allow_headers='token', expose_headers='token', origins='http://localhost:8080')
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Changeme_123@localhost:3306/express'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-login_manager = LoginManager(app)
 db = SQLAlchemy(app)
 
 @app.before_request
-def is_authed():
+def before_request():
     if request.path == '/login':
         return
+    # https://segmentfault.com/q/1010000012364132
+    if request.method == 'OPTIONS':
+        return make_response('ok', 200)
     token = request.headers.get('token')
-    if not token or not current_user.verify_token(token):
-        print('before'*20)
+    try:
+        data = serializer.loads(token.encode('utf-8'))
+    except:
         abort(401)
-
-@app.after_request
-def set_token(resp):
-    if resp.status_code != 200:
-        return resp
-    token = mc_client.get(current_user.username)
-    resp.headers.add_header('token', token)
-    return resp
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -74,7 +71,7 @@ class Role(db.Model):
             role.discount = discount
         db.session.commit()
 
-class Customer(db.Model, UserMixin):
+class Customer(db.Model):
     __tablename__ = 'customer'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(64), unique=True)
@@ -88,7 +85,10 @@ class Customer(db.Model, UserMixin):
 
     def generate_token(self):
         token = serializer.dumps({'id': self.id, 'username': self.username, 'role': self.role}).decode('utf-8')
-        mc_client.set(self.username, token, EXPIRE_TIME)
+        # 双份存储 在before_request和after_request中使用
+        # mc_client.set(token, self, EXPIRE_TIME)
+        # mc_client.set(self.username, token, EXPIRE_TIME)
+        return token
 
     def verify_token(self, token):
         try:
@@ -100,45 +100,42 @@ class Customer(db.Model, UserMixin):
             return False
         return data.get('username') == self.username
 
-    def confirm(self, token):
-        try:
-            data = serializer.loads(token.encode('utf-8'))
-        except:
-            return False
-        if data.get('username') != self.username:
-            return False
-        self.confirmed = True
-        db.session.add(self)
-        db.session.commit()
-        return True
+    # def confirm(self, token):
+    #     try:
+    #         data = serializer.loads(token.encode('utf-8'))
+    #     except:
+    #         return False
+    #     if data.get('username') != self.username:
+    #         return False
+    #     self.confirmed = True
+    #     db.session.add(self)
+    #     db.session.commit()
+    #     return True
 
-    @staticmethod
-    def reset_password(token, new_password):
-        try:
-            data = serializer.loads(token.encode('utf-8'))
-        except:
-            return False
-        user = Customer.query.get(data.get('id'))
-        if user is None:
-            return False
-        user.password = new_password
-        db.session.add(user)
-        db.session.commit()
-        return True
+    # @staticmethod
+    # def reset_password(token, new_password):
+    #     try:
+    #         data = serializer.loads(token.encode('utf-8'))
+    #     except:
+    #         return False
+    #     user = Customer.query.get(data.get('id'))
+    #     if user is None:
+    #         return False
+    #     user.password = new_password
+    #     db.session.add(user)
+    #     db.session.commit()
+    #     return True
 
-    @staticmethod
-    def register(username, password):
-        user = db.session.query(Customer.username == username).first()
-        if user:
-            return False
-        password_hash = generate_password_hash(password)
-        db.session.add(Customer(username=username, password_hash=password_hash))
-        db.session.commit()
-        return True
+    # @staticmethod
+    # def register(username, password):
+    #     user = db.session.query(Customer.username == username).first()
+    #     if user:
+    #         return False
+    #     password_hash = generate_password_hash(password)
+    #     db.session.add(Customer(username=username, password_hash=password_hash))
+    #     db.session.commit()
+    #     return True
 
-@login_manager.user_loader
-def load_user(user_id):
-    return Customer.query.get(int(user_id))
 
 class ExpressPrice(db.Model):
     __tablename__ = 'price'
@@ -152,7 +149,7 @@ class ExpressPrice(db.Model):
 def admin_required(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        if current_user.role != 'Administrator':
+        if session['user'].role != 'Administrator':
             return 'Permission denied', 401
         return func(*args, **kwargs)
     return wrapper
@@ -182,7 +179,7 @@ def import_express_price():
     _import_express_price(tmp_file)
     return make_response('Import express success.', 200)
 
-@login_required
+# @login_required
 @app.route('/query', methods=['POST'])
 def query():
     from_ = request.form.get('from_')
@@ -207,7 +204,7 @@ def query():
         })
     return make_response(jsonify({'expressList': result}), 200)
 
-@login_required
+# @login_required
 @app.route('/countries', methods=['GET'])
 def get_countries():
     data_set = db.session.query(ExpressPrice.from_, ExpressPrice.to_).all()
@@ -226,9 +223,8 @@ def login():
     password = request.form.get('password')
     user = Customer.query.filter_by(username=username).first()
     if user and user.verify_password(password):
-        login_user(user, remember=True)
-        user.generate_token()
-        return make_response(jsonify({'isAdmin': user.role=='Administrator'}), 200)
+        token = user.generate_token()
+        return make_response(jsonify({'isAdmin': user.role == 'Administrator'}), 200, {'token': token})
     return make_response('Username or password is incorrect.', 401)
 
 # @login_required
