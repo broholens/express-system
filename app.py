@@ -19,7 +19,7 @@ from config import EXPRESS_PRICE_HEADER, UPLOAD_FOLDER, INIT_DB_SQL, EXPIRE_TIME
 
 mc_client = Client(('localhost', 11211))
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True, allow_headers='*', expose_headers='token', origins='http://localhost:8080')
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Changeme_123@localhost:3306/express'
@@ -43,10 +43,6 @@ def set_token(resp):
         return resp
     token = mc_client.get(current_user.username)
     resp.headers.add_header('token', token)
-    resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080'
-    resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With, token'
-    resp.headers['Access-Control-Allow-Credentials'] = 'true'
-    resp.headers['Access-Control-Expose-Headers'] = 'token'
     return resp
 
 class Role(db.Model):
