@@ -6,7 +6,8 @@ import functools
 from flask import Flask, request, make_response, jsonify, session, abort
 from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired
-from werkzeug import secure_filename, generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 # from flask_httpauth import HTTPTokenAuth
 
@@ -20,7 +21,7 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True, allow_headers='token', expose_headers='token', origins='http://localhost:8080')
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{os.env.get('MYSQL_PWD')}@localhost:3306/express'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{os.environ.get("MYSQL_PWD")}@localhost:3306/express'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
