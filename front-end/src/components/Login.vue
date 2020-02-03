@@ -35,7 +35,7 @@
         this.$axios.post('http://localhost:5000/login', params)
         .then((response) => {
           if (response.status === 200) {
-            self.changeToken(response.headers['token']);
+            self.changeToken(response.headers.token);
             self.setRole(response.data.isAdmin);
             self.$router.push("/home");
           }

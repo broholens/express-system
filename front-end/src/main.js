@@ -11,16 +11,15 @@ import VueCookies from 'vue-cookies'
 import Vuex from 'vuex'
 
 Vue.use(ElementUI);
-// Vue.use(axios);
 Vue.use(VueCookies)
 
 axios.defaults.withCredentials=true;
 axios.defaults.baseURL = 'http://localhost:5000/'
 axios.interceptors.request.use(function (config) {
-	let token = localStorage.getItem('token');
-  console.log(token);
+	let token = store.state.token;
 	if (token) {
-		config.headers.common['token'] = token;
+		config.headers['token'] = token;
+//    config.headers['Content-Type'] = "application/x-www-form-urlencoded;charset=utf8"
 	}
 	return config;
 })
