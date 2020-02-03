@@ -1,7 +1,3 @@
-"""
-TODO:
-1. 数据库密码从env中获取
-"""
 import os
 import secrets
 import functools
@@ -24,7 +20,7 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True, allow_headers='token', expose_headers='token', origins='http://localhost:8080')
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Changeme_123@localhost:3306/express'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{os.env.get('MYSQL_PWD')}@localhost:3306/express'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
