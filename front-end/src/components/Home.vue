@@ -1,6 +1,6 @@
 <template>
   <el-row>
-    <el-col :span="4">
+    <el-col v-if="haveToken" :span="4">
       <h5>菜单</h5>
       <el-menu
         class="el-menu-vertical-demo">
@@ -18,6 +18,9 @@
         </el-menu-item>
       </el-menu>
     </el-col>
+    <el-col v-else>
+      <el-button type="primary" @click="toLogin">登录</el-button>
+    </el-col>
   </el-row>
 </template>
 
@@ -25,7 +28,8 @@
   export default {
     data() {
       return {
-        isAdmin: this.$store.state.isAdmin
+        haveToken: this.$store.state.token!=='',
+        isAdmin: !this.haveToken && this.$store.state.isAdmin
       }
     },
     methods: {
@@ -35,6 +39,9 @@
       toQueryPrice() {
         this.$router.push('/query-price')
       },
+      toLogin() {
+        this.$router.push('/login')
+      }
     }
   }
 </script>

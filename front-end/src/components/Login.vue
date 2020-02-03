@@ -37,7 +37,7 @@
           if (response.status === 200) {
             self.changeToken(response.headers.token);
             self.setRole(response.data.isAdmin);
-            self.$router.push("/home");
+            self.$router.push("/");
           }
         })
         .catch(function (error) {
