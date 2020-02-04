@@ -132,7 +132,7 @@
     },
     mounted() {
       let self = this;
-      this.$axios.get('/countries').then((response) => {
+      this.$axios.post('/countries').then((response) => {
         if (response.status === 200) {
           // 自动补全的返回值里面必须包含value
           self.countries = response.data.countries;
