@@ -22,7 +22,7 @@ app = Flask(__name__)
 # CORS(app, supports_credentials=True)
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{os.environ.get('MYSQL_PWD')}@localhost:3306/express'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{os.environ.get("MYSQL_PWD")}@localhost:3306/express?charset=utf8'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
@@ -36,8 +36,8 @@ def before_request():
         resp = app.make_default_options_response()
         resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With, token'
         resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
-        resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080'
-        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Access-Control-Allow-Origin'] = 'http://122.51.50.135'
+        # resp.headers['Content-Type'] = 'text/plain'
         resp.headers['Access-Control-Allow-Credentials'] = 'true'
         return resp
     token = request.headers.get('token')
@@ -48,11 +48,12 @@ def before_request():
 
 @app.after_request
 def after_request(resp):
-    # if request.method != 'OPTIONS':
-    resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080'
+    resp.headers['Access-Control-Allow-Origin'] = 'http://122.51.50.135'
     resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With, token'
     resp.headers['Access-Control-Allow-Credentials'] = 'true'
+    resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
     resp.headers['Access-Control-Expose-Headers'] = 'token'
+    resp.headers['Connection'] = 'keep-alive'
     return resp
 
 class Role(db.Model):
