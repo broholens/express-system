@@ -18,7 +18,8 @@ from config import EXPRESS_PRICE_HEADER, UPLOAD_FOLDER, EXPIRE_TIME
 # mc_client = Client(('localhost', 11211))
 app = Flask(__name__)
 # origin不能写为127.0.0.1
-CORS(app, supports_credentials=True, allow_headers='token', expose_headers='token', origins='http://localhost:8080')
+# CORS(app, supports_credentials=True, allow_headers='token', expose_headers='token', origins='*')
+CORS(app, supports_credentials=True)
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{os.environ.get("MYSQL_PWD")}@localhost:3306/express'
@@ -32,12 +33,25 @@ def before_request():
         return
     # https://segmentfault.com/q/1010000012364132
     if request.method == 'OPTIONS':
-        return make_response('ok', 200)
+        resp = app.make_default_options_response()
+        if 'ACCESS_CONTROL_REQUEST_HEADERS' in request.headers:
+            resp.headers['Access-Control-Allow-Headers'] = request.headers['ACCESS_CONTROL_REQUEST_HEADERS']
+        resp.headers['Access-Control-Allow-Methods'] = request.headers['Access-Control-Request-Method']
+        resp.headers['Access-Control-Allow-Origin'] = request.headers['Origin']
+        return resp
     token = request.headers.get('token')
     try:
         data = serializer.loads(token.encode('utf-8'))
     except:
         abort(401)
+
+@app.after_request
+def after_request(resp):
+    if request.method != 'OPTIONS':
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With, token'
+        resp.headers['Access-Control-Allow-Credentials'] = 'true'
+        resp.headers['Access-Control-Expose-Headers'] = 'token'
 
 class Role(db.Model):
     __tablename__ = 'roles'
