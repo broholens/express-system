@@ -32,7 +32,7 @@
         let params = new FormData();
         params.append('username', this.username);
         params.append('password', sha256(this.password));
-        this.$axios.post('http://localhost:5000/login', params)
+        this.$axios.post('/login', params)
         .then((response) => {
           if (response.status === 200) {
             self.changeToken(response.headers.token);

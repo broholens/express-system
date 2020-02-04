@@ -37,7 +37,7 @@
         let requestConfig = {
           headers: {'Content-Type': 'multipart/form-data'}
         }
-        this.$axios.post('http://localhost:5000/import-express-price', fileFormData, requestConfig).then((response) => {
+        this.$axios.post('/import-express-price', fileFormData, requestConfig).then((response) => {
           this.ready = true;
           this.loading = false;
           if (response.status === 200) {

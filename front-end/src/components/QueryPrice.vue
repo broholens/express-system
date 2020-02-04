@@ -122,7 +122,7 @@
           "to_": this.to_,
           "weight": this.weight
         }
-        this.$axios.post('http://localhost:5000/query', qs.stringify(params)).then((response) => {
+        this.$axios.post('/query', qs.stringify(params)).then((response) => {
           if (response.status === 200) {
             self.seen = true;
             self.queriedData = response.data.expressList;
@@ -132,7 +132,7 @@
     },
     mounted() {
       let self = this;
-      this.$axios.get('http://localhost:5000/countries').then((response) => {
+      this.$axios.get('/countries').then((response) => {
         if (response.status === 200) {
           // 自动补全的返回值里面必须包含value
           self.countries = response.data.countries;
