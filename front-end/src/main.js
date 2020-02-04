@@ -23,7 +23,19 @@ axios.interceptors.request.use(function (config) {
 	}
 	return config;
 })
-
+//axios.interceptors.response.use(
+//  response => {
+//      console.log(response);
+//      if (response.status === 200) {
+//          return response;
+//      }else {
+//	  router.push('/login');
+//      }
+//  },
+//  error => {
+//      router.push('/login');
+//  }
+//)
 Vue.prototype.$axios = axios;
 
 Vue.config.productionTip = false
