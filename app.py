@@ -42,6 +42,7 @@ def before_request():
         return resp
     token = request.headers.get('token')
     try:
+        # serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
         data = serializer.loads(token.encode('utf-8'))
     except:
         abort(401)
@@ -98,6 +99,7 @@ class Customer(db.Model):
         return check_password_hash(self.password_hash, password)
 
     def generate_token(self):
+        # serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
         token = serializer.dumps({'id': self.id, 'username': self.username, 'role': self.role}).decode('utf-8')
         # 双份存储 在before_request和after_request中使用
         # mc_client.set(token, self, EXPIRE_TIME)
@@ -219,7 +221,7 @@ def query():
     return make_response(jsonify({'expressList': result}), 200)
 
 # @login_required
-@app.route('/countries', methods=['GET'])
+@app.route('/countries', methods=['POST'])
 def get_countries():
     data_set = db.session.query(ExpressPrice.from_, ExpressPrice.to_).all()
     result = []
