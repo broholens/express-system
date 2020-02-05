@@ -3,10 +3,10 @@ let defaultToken = ''
 let isAdmin = false
 try {
   if (localStorage.token) {
-    defaultToken = localStorage.token
+    defaultToken = sessionStorage.token
   }
   if (localStorage.isAdmin) {
-    isAdmin = localStorage.isAdmin
+    isAdmin = sessionStorage.isAdmin
   }
 } catch (e) {}
 
