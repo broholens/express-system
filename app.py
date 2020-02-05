@@ -1,6 +1,14 @@
 import os
 import secrets
 import functools
+import platform
+
+if platform.platform().startswith('Windows'):
+    ALLOW_ORIGIN = 'http://localhost:8080'
+    MYSQL_PWD = 'Changeme_123'
+else:
+    ALLOW_ORIGIN = 'http://122.51.50.135'
+    MYSQL_PWD = os.environ.get("MYSQL_PWD")
 
 # from pymemcache.client.base import Client
 from flask import Flask, request, make_response, jsonify, session, abort
@@ -22,7 +30,8 @@ app = Flask(__name__)
 # CORS(app, supports_credentials=True)
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{os.environ.get("MYSQL_PWD")}@localhost:3306/express?charset=utf8'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{MYSQL_PWD}@localhost:3306/express?charset=utf8'
+# app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:Changeme_123@localhost:3306/express?charset=utf8'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
@@ -36,7 +45,8 @@ def before_request():
         resp = app.make_default_options_response()
         resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With, token'
         resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
-        resp.headers['Access-Control-Allow-Origin'] = 'http://122.51.50.135'
+        resp.headers['Access-Control-Allow-Origin'] = ALLOW_ORIGIN
+        # resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080'
         # resp.headers['Content-Type'] = 'text/plain'
         resp.headers['Access-Control-Allow-Credentials'] = 'true'
         return resp
@@ -49,7 +59,8 @@ def before_request():
 
 @app.after_request
 def after_request(resp):
-    resp.headers['Access-Control-Allow-Origin'] = 'http://122.51.50.135'
+    resp.headers['Access-Control-Allow-Origin'] = ALLOW_ORIGIN
+    # resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080'
     resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With, token'
     resp.headers['Access-Control-Allow-Credentials'] = 'true'
     resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
@@ -198,18 +209,19 @@ def import_express_price():
 # @login_required
 @app.route('/query', methods=['POST'])
 def query():
-    from_ = request.form.get('from_')
-    to_ = request.form.get('to_')
+    # from_ = request.form.get('from_')
+    from_ = 'CN'
+    to_ = request.form.get('to_').split('|')[0]
     weight = float(request.form.get('weight'))
     data_set = ExpressPrice.query.filter_by(from_=from_, to_=to_).all()
     result = []
     for data in data_set:
-        price_formula = data.price_formula.replace('X', str(weight))
+        price_formula = data.price_formula.replace('X', str(weight)).replace('（', '(').replace('）', ')').strip()
         total_price = round(eval(price_formula), 2)
         price = round(total_price / weight, 2)
         result.append({
             'name': data.name,
-            'from_': data.from_,
+            # 'from_': data.from_,
             'to_': data.to_,
             'weight': weight,
             'price_formula': price_formula,
@@ -219,19 +231,6 @@ def query():
             'remarks': data.remarks
         })
     return make_response(jsonify({'expressList': result}), 200)
-
-# @login_required
-@app.route('/countries', methods=['POST'])
-def get_countries():
-    data_set = db.session.query(ExpressPrice.from_, ExpressPrice.to_).all()
-    result = []
-    for data in data_set:
-        result.extend(data)
-    result = [
-        {'value': data}
-        for data in set(result)
-    ]
-    return make_response(jsonify({'countries': result}), 200)
 
 @app.route('/login', methods=['POST'])
 def login():

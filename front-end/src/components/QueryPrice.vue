@@ -1,90 +1,99 @@
 <template>
   <div>
-    <el-row class="address">
-      <el-col :span="8">
-        <el-autocomplete
-          class="inline-input"
-          clearable
-          v-model="from_"
-          :fetch-suggestions="querySearch"
-          placeholder="始发地"
-          @select="handleFrom"
-        ></el-autocomplete>
-      </el-col>
-      <el-col :span="8">
-        <el-autocomplete
-          class="inline-input"
-          clearable
-          v-model="to_"
-          :fetch-suggestions="querySearch"
-          placeholder="目的地"
-          @select="handleTo"
-        ></el-autocomplete>
-      </el-col>
-      <el-col :span="8">
-        <el-input class="inline-input" clearable v-model="weight" placeholder="重量"></el-input>
-      </el-col>
-    </el-row>
-    <br>
-    <el-button type="primary" icon="el-icon-search" @click="query">查询</el-button>
-    <br>
-    <br>
+    <div style="width: 60%" class="page">
+      <el-row class="address">
+        <el-col :span="8">
+          <el-input
+            placeholder="始发地: CN"
+            v-model="from_"
+            :disabled="true">
+          </el-input>
+          <!-- <el-autocomplete
+            class="inline-input"
+            clearable
+            v-model="from_"
+            :fetch-suggestions="querySearch"
+            placeholder="始发地"
+            @select="handleFrom"
+          ></el-autocomplete> -->
+        </el-col>
+        <el-col :span="8">
+          <el-autocomplete
+            class="inline-input"
+            clearable
+            v-model="to_"
+            :fetch-suggestions="querySearch"
+            placeholder="目的地"
+            @select="handleTo"
+          ></el-autocomplete>
+        </el-col>
+        <el-col :span="8">
+          <!-- <el-input-number v-model="weight" :precision="2" :step="0.1" :max="10" placeholder="重量" label="重量"></el-input-number> -->
+          <el-input class="inline-input" clearable v-model="weight" placeholder="重量"></el-input>
+        </el-col>
+      </el-row>
+      <br>
+      <br>
+      <el-button type="primary" icon="el-icon-search" @click="query">查询</el-button>
+      <br>
+      <br>
+    </div>
     <el-table
-        v-if="seen"
-        align="center"
-        :data="queriedData"
-        style="width: 100%"
-        :default-sort = "{prop: 'price', order: 'descending'}"
-        >
-        <el-table-column
-          prop="name"
-          label="运输渠道"
-          width="180">
-        </el-table-column>
-        <el-table-column
-          prop="to_"
-          label="目的地"
-          width="90">
-        </el-table-column>
-        <el-table-column
-          prop="weight"
-          label="重量(KG)"
-          width="90">
-        </el-table-column>
-        <el-table-column
-          prop="price_formula"
-          label="价格公式"
-          width="180">
-        </el-table-column>
-        <el-table-column
-          prop="total_price"
-          label="总价"
-          sortable
-          width="160">
-        </el-table-column>
-        <el-table-column
-          prop="price"
-          label="换算后单价"
-          sortable
-          width="160">
-        </el-table-column>
-        <el-table-column
-          prop="currency"
-          label="币种"
-          width="80">
-        </el-table-column>
-        <el-table-column
-          prop="remarks"
-          label="备注"
-          width="240">
-        </el-table-column>
-      </el-table>
+      v-if="seen"
+      align="center"
+      :data="queriedData"
+      style="width: 100%"
+      :default-sort = "{prop: 'price', order: 'descending'}"
+      >
+      <el-table-column
+        prop="name"
+        label="运输渠道"
+        width="180">
+      </el-table-column>
+      <el-table-column
+        prop="to_"
+        label="目的地"
+        width="90">
+      </el-table-column>
+      <el-table-column
+        prop="weight"
+        label="重量(KG)"
+        width="90">
+      </el-table-column>
+      <el-table-column
+        prop="price_formula"
+        label="价格公式"
+        width="180">
+      </el-table-column>
+      <el-table-column
+        prop="total_price"
+        label="总价"
+        sortable
+        width="160">
+      </el-table-column>
+      <el-table-column
+        prop="price"
+        label="换算后单价"
+        sortable
+        width="160">
+      </el-table-column>
+      <el-table-column
+        prop="currency"
+        label="币种"
+        width="80">
+      </el-table-column>
+      <el-table-column
+        prop="remarks"
+        label="备注"
+        width="240">
+      </el-table-column>
+    </el-table>
   </div>
 </template>
 <script>
   import qs from 'qs'
   import { Message } from 'element-ui'
-
+  import data from '../../static/data/country.json'
   export default {
     data() {
       return {
@@ -130,14 +139,13 @@
         })
       }
     },
-    mounted() {
-      let self = this;
-      this.$axios.post('/countries').then((response) => {
-        if (response.status === 200) {
-          // 自动补全的返回值里面必须包含value
-          self.countries = response.data.countries;
-        }
-      })
+    created() {
+      this.countries = data;
     }
   }
 </script>
+<style scoped>
+.page{
+  margin: 0 auto;
+}
+</style>

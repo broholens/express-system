@@ -15,6 +15,7 @@ Vue.use(VueCookies)
 
 axios.defaults.withCredentials=true;
 axios.defaults.baseURL = 'http://122.51.50.135:5000/'
+// axios.defaults.baseURL = 'http://localhost:5000/'
 axios.interceptors.request.use(function (config) {
 	let token = store.state.token;
 	if (token) {
