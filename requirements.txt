@@ -3,3 +3,4 @@ werkzeug
 itsdangerous
 Flask-SQLAlchemy
 gunicore
+pandas
