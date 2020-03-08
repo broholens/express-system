@@ -1,0 +1,1 @@
+* [淘宝 NPM 镜像](https://developer.aliyun.com/mirror/NPM?from=tnpm): `npm install -g cnpm --registry=https://registry.npm.taobao.org`

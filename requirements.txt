@@ -2,3 +2,4 @@ Flask
 werkzeug
 itsdangerous
 Flask-SQLAlchemy
+gunicore
