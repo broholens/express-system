@@ -23,7 +23,11 @@ git config --global credential.helper store
 [linux mysql configuration](https://zhuanlan.zhihu.com/p/64080934)
 
 
-# nodejs
+# nodejs & npm
 
 ### Download
-* linux: `apt-get install nodejs && apt-get install npm`
+* [linux](https://developer.aliyun.com/mirror/NPM?from=tnpm)
+
+
+# Reference
+* [ERROR 1698 (28000): Access denied for user 'root'@'localhost](https://blog.csdn.net/hello404/article/details/82149597)
