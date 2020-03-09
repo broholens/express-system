@@ -3,12 +3,14 @@ import secrets
 import functools
 import platform
 
-if platform.platform().startswith('Windows'):
-    ALLOW_ORIGIN = 'http://localhost:8080'
-    MYSQL_PWD = 'Changeme_123'
-else:
-    ALLOW_ORIGIN = 'http://122.51.50.135'
-    MYSQL_PWD = os.environ.get("MYSQL_PWD")
+# if platform.platform().startswith('Windows'):
+#     ALLOW_ORIGIN = 'http://localhost:8080'
+#     MYSQL_PWD = 'Changeme_123'
+# else:
+#     ALLOW_ORIGIN = 'http://122.51.50.135'
+#     MYSQL_PWD = os.environ.get("MYSQL_PWD")
+ALLOW_ORIGIN = 'http://localhost:8080'
+MYSQL_PWD = os.environ.get("MYSQL_PWD")
 
 # from pymemcache.client.base import Client
 from flask import Flask, request, make_response, jsonify, session, abort
@@ -16,7 +18,7 @@ from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_cors import CORS
+# from flask_cors import CORS
 # from flask_httpauth import HTTPTokenAuth
 
 from config import EXPRESS_PRICE_HEADER, UPLOAD_FOLDER, EXPIRE_TIME
