@@ -2,5 +2,5 @@ Flask
 werkzeug
 itsdangerous
 Flask-SQLAlchemy
-gunicore
+gunicorn
 pandas
