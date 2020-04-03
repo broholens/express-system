@@ -4,3 +4,4 @@ itsdangerous
 Flask-SQLAlchemy
 gunicorn
 pandas
+pymysql
