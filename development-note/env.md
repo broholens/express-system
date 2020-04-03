@@ -18,10 +18,10 @@ git config --global credential.helper store
 
 ### Download
 * linux: `apt update && apt install mysql-server -y`
+* [windows](https://zhuanlan.zhihu.com/p/37152572) 
 
 ### Configuration
 [linux mysql configuration](https://zhuanlan.zhihu.com/p/64080934)
-
 
 # nodejs & npm
 
