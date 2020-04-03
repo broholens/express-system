@@ -32,7 +32,7 @@ app = Flask(__name__)
 # CORS(app, supports_credentials=True)
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:{MYSQL_PWD}@localhost:3306/express?charset=utf8'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://express_user:{MYSQL_PWD}@localhost:3306/express?charset=utf8'
 # app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:Changeme_123@localhost:3306/express?charset=utf8'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -40,8 +40,12 @@ db = SQLAlchemy(app)
 
 @app.before_request
 def before_request():
-    if request.path == '/login':
+    path = str(request.path)
+    print(path)
+    if path in ['/login', '/register', '/is-user-exists']:
         return
+    # if request.path == '/login' or request.path == '/register':
+    #     return
     # https://segmentfault.com/q/1010000012364132
     if request.method == 'OPTIONS':
         resp = app.make_default_options_response()
@@ -62,7 +66,6 @@ def before_request():
 @app.after_request
 def after_request(resp):
     resp.headers['Access-Control-Allow-Origin'] = ALLOW_ORIGIN
-    # resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080'
     resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With, token'
     resp.headers['Access-Control-Allow-Credentials'] = 'true'
     resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
@@ -155,15 +158,16 @@ class Customer(db.Model):
     #     db.session.commit()
     #     return True
 
-    # @staticmethod
-    # def register(username, password):
-    #     user = db.session.query(Customer.username == username).first()
-    #     if user:
-    #         return False
-    #     password_hash = generate_password_hash(password)
-    #     db.session.add(Customer(username=username, password_hash=password_hash))
-    #     db.session.commit()
-    #     return True
+    @staticmethod
+    def register(username, password):
+        user = Customer.query.filter_by(username=username).first()
+        # user = (True, ) or (False, )
+        if user:
+            return False
+        password_hash = generate_password_hash(password)
+        db.session.add(Customer(username=username, password_hash=password_hash))
+        db.session.commit()
+        return True
 
 
 class ExpressPrice(db.Model):
@@ -250,21 +254,29 @@ def login():
 #     logout_user()
 #
 # @admin_required
-# @app.route('/register', methods=['POST'])
-# def register():
-#     username = request.form.get('username')
-#     password = request.form.get('password')
-#     if not Customer().register(username=username, password=password):
-#         return make_response('Username has been used', 400)
-#     user = Customer.query.filter_by(username=username).first()
-#     login_user(user, remember=True)
-#     user.generate_token()
-#     return make_response('success', 200)
+@app.route('/register', methods=['POST'])
+def register():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    if not Customer().register(username=username, password=password):
+        return make_response('Username has been used', 400)
+    user = Customer.query.filter_by(username=username).first()
+    token = user.generate_token()
+    return make_response(jsonify({'isAdmin': False}), 200, {'token': token})
 
+@app.route('/is-user-exists', methods=['POST'])
+def is_user_exists():
+    username = request.form.get('username')
+    print(username)
+    user = Customer.query.filter_by(username=username).first()
+    print(user)
+    if user:
+        return make_response(jsonify({'isExists': True}))
+    return make_response(jsonify({'isExists': False}))
 
 if __name__ == '__main__':
     # db.session.execute(INIT_DB_SQL)
     # db.session.commit()
     db.create_all()
     Role().init_roles()
-    app.run('0.0.0.0')
+    app.run('0.0.0.0', debug=True)

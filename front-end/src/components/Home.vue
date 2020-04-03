@@ -20,6 +20,7 @@
     </el-col>
     <el-col v-else>
       <el-button type="primary" @click="toLogin">登录</el-button>
+      <el-button type="primary" @click="toRegist">注册</el-button>
     </el-col>
   </el-row>
 </template>
@@ -41,6 +42,9 @@
       },
       toLogin() {
         this.$router.push('/login')
+      },
+      toRegist() {
+        this.$router.push('/regist')
       }
     }
   }
