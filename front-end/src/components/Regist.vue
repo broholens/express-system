@@ -10,6 +10,12 @@
       <el-form-item label="确认密码" prop="checkPass">
         <el-input type="password" v-model="ruleForm.checkPass" autocomplete="off"></el-input>
       </el-form-item>
+      <el-form-item label="验证码" prop="captcha">
+        <el-input v-model="ruleForm.captcha" autocomplete="off" maxlength=4 style="float: left; width: 122px;"></el-input>
+        <div>
+          <img src="" ref="code" @click="ChangeCode">
+        </div>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" size="small" @click="submitForm('ruleForm')">注册</el-button>
       </el-form-item>
@@ -60,11 +66,22 @@
           callback();
         }
       };
+      var checkCode = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error('验证码不能为空'));
+        } else if (sha256(value) !== this.captcha_code) {
+          callback(new Error('验证码错误'));
+        } else {
+          callback();
+        }
+      };
       return {
+        captcha_code: '',
         ruleForm: {
           pass: '',
           checkPass: '',
-          username: ''
+          username: '',
+          captcha: ''
         },
         rules: {
           pass: [
@@ -75,9 +92,15 @@
           ],
           username: [
             { validator: checkUsername, trigger: 'blur'}
+          ],
+          captcha: [
+            { validator: checkCode, trigger: 'blur' }
           ]
         }
       };
+    },
+    mounted() {
+      this.changeCode()
     },
     methods: {
       ...mapMutations([
@@ -90,15 +113,16 @@
         console.log(value);
         console.log(params.get('username'));
         return this.$axios.post('/is-user-exists', params)
-        // .then((response) => {
-        //   console.log(response.data);
-        //   if (!response.data.isExists) {
-        //     console.log('return true')
-        //     return true
-        //   }else {
-        //     return false
-        //   }
-        // })
+      },
+      changeCode() {
+        this.$axios.get('/generate-captcha-code')
+        .then((response) => {
+          this.captcha_code = response.data.captcha;
+          this.$refs.code.setAttribute(
+            "src",
+            "../../../"+this.captcha_code+'.png'
+          )
+        })
       },
       submitForm(formName) {
         this.$refs[formName].validate((valid) => {

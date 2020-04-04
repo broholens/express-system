@@ -1,10 +1,14 @@
 import os
+import hashlib
+import string
+import random
 import shutil
 import secrets
 import functools
 import platform
 from concurrent.futures import ThreadPoolExecutor
 
+from captcha.image import ImageCaptcha
 # from pymemcache.client.base import Client
 from flask import Flask, request, make_response, jsonify, session, abort
 from flask_sqlalchemy import SQLAlchemy
@@ -26,6 +30,7 @@ else:
 # MYSQL_PWD = os.environ.get("MYSQL_PWD")
 
 executor = ThreadPoolExecutor(4)
+captcha_choices = string.ascii_letters.replace('o', '').replace('O', '').replace('l', '') + string.digits.replace('0', '')
 # auth = HTTPTokenAuth(scheme='JWT')
 # mc_client = Client(('localhost', 11211))
 app = Flask(__name__)
@@ -34,8 +39,8 @@ app = Flask(__name__)
 # CORS(app, supports_credentials=True)
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 serializer = Serializer(app.config['SECRET_KEY'], EXPIRE_TIME)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://express_user:{MYSQL_PWD}@localhost:3306/express?charset=utf8'
-# app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:Changeme_123@localhost:3306/express?charset=utf8'
+# app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://express_user:{MYSQL_PWD}@localhost:3306/express?charset=utf8'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://root:Changeme_123@localhost:3306/express?charset=utf8'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
@@ -43,7 +48,7 @@ db = SQLAlchemy(app)
 @app.before_request
 def before_request():
     path = str(request.path)
-    if path in ['/login', '/register', '/is-user-exists']:
+    if path in ['/login', '/register', '/is-user-exists', '/generate-captcha-code']:
         return
     # if request.path == '/login' or request.path == '/register':
     #     return
@@ -170,7 +175,6 @@ class Customer(db.Model):
         db.session.commit()
         return True
 
-
 class ExpressPrice(db.Model):
     __tablename__ = 'price'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -179,6 +183,7 @@ class ExpressPrice(db.Model):
     name = db.Column(db.String(80), nullable=False, index=True)
     price_formula = db.Column(db.String(40), default='X')
     remarks = db.Column(db.Text)
+
 
 def admin_required(func):
     @functools.wraps(func)
@@ -206,7 +211,7 @@ def _import_express_price(file_path):
     finally:
         os.remove(file_path)
     return True
-
+ 
 # @admin_required
 @app.route('/import-express-price', methods=['POST'])
 def import_express_price():
@@ -280,7 +285,16 @@ def is_user_exists():
     user = Customer.query.filter_by(username=username).first()
     if user:
         return make_response(jsonify({'isExists': True}))
-    return make_response(jsonify({'isExists': False}))
+    return make_response(jsonify({'isExists': False})
+
+@app.route('/generate-captcha-code', methods=['GET'])
+def generate_code():
+    captcha_str = ''.join(random.sample(captcha_choices, 4))
+    hash_str = hashlib.sha256(captcha_str)
+    img = ImageCaptcha().generate_image(captcha_str)
+    # TODO: 加路径
+    img.save(hash_str+'.png')
+    return make_response(jsonify({'captcha': hash_str})
 
 if __name__ == '__main__':
     # db.session.execute(INIT_DB_SQL)
