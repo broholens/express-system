@@ -1,5 +1,5 @@
 <template>
-  <el-form class="loginFrom" style="width: 20%">
+  <el-form class="loginFrom" style="width: 20%" @keyup.enter.native="submitForm">
     <el-input v-model.trim="username" autocomplete="on" clearable placeholder="账号"></el-input>
     <br>
     <br>
