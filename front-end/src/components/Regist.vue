@@ -1,18 +1,20 @@
 <template>
-  <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm" style="width: 20%">
-    <el-form-item label="账号" prop="username">
-      <el-input v-model.trim="ruleForm.username"></el-input>
-    </el-form-item>
-    <el-form-item label="密码" prop="pass">
-      <el-input type="password" v-model="ruleForm.pass" autocomplete="off"></el-input>
-    </el-form-item>
-    <el-form-item label="确认密码" prop="checkPass">
-      <el-input type="password" v-model="ruleForm.checkPass" autocomplete="off"></el-input>
-    </el-form-item>
-    <el-form-item>
-      <el-button type="primary" size="small" @click="submitForm('ruleForm')">注册</el-button>
-    </el-form-item>
-  </el-form>
+  <div style="width: 20%; margin:0 auto">
+    <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+      <el-form-item label="账号" prop="username">
+        <el-input v-model.trim="ruleForm.username"></el-input>
+      </el-form-item>
+      <el-form-item label="密码" prop="pass">
+        <el-input type="password" v-model="ruleForm.pass" autocomplete="off"></el-input>
+      </el-form-item>
+      <el-form-item label="确认密码" prop="checkPass">
+        <el-input type="password" v-model="ruleForm.checkPass" autocomplete="off"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" size="small" @click="submitForm('ruleForm')">注册</el-button>
+      </el-form-item>
+    </el-form>
+  </div>
 </template>
 
 <script>
@@ -26,11 +28,18 @@
         if (value === '') {
           callback(new Error('用户名不能为空'))
         }
-        // setTimeout(() => {
-        if (!this.checkusername(value)) {
-          callback(new Error('用户名已存在'));
-        }
-        // }, 1000)
+        setTimeout(() => {
+          this.checkusername(value)
+          .then((response) => {
+            console.log(response.data)
+            if (response.data.isExists) {
+              callback(new Error('用户名已存在'));
+            }else {
+              // 没有callback的话会一直转圈
+              callback()
+            }
+          })
+        }, 1000)
       };
       var validatePass = (rule, value, callback) => {
         if (value === '') {
@@ -80,16 +89,16 @@
         params.append('username', value);
         console.log(value);
         console.log(params.get('username'));
-        this.$axios.post('/is-user-exists', params)
-        .then((response) => {
-          console.log(response.data);
-          if (!response.data.isExists) {
-            console.log('return true')
-            return true
-          }else {
-            return false
-          }
-        })
+        return this.$axios.post('/is-user-exists', params)
+        // .then((response) => {
+        //   console.log(response.data);
+        //   if (!response.data.isExists) {
+        //     console.log('return true')
+        //     return true
+        //   }else {
+        //     return false
+        //   }
+        // })
       },
       submitForm(formName) {
         this.$refs[formName].validate((valid) => {
