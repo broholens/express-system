@@ -1,16 +1,9 @@
 import os
+import shutil
 import secrets
 import functools
 import platform
-
-# if platform.platform().startswith('Windows'):
-#     ALLOW_ORIGIN = 'http://localhost:8080'
-#     MYSQL_PWD = 'Changeme_123'
-# else:
-#     ALLOW_ORIGIN = 'http://122.51.50.135'
-#     MYSQL_PWD = os.environ.get("MYSQL_PWD")
-ALLOW_ORIGIN = 'http://localhost:8080'
-MYSQL_PWD = os.environ.get("MYSQL_PWD")
+from concurrent.futures import ThreadPoolExecutor
 
 # from pymemcache.client.base import Client
 from flask import Flask, request, make_response, jsonify, session, abort
@@ -23,7 +16,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from config import EXPRESS_PRICE_HEADER, UPLOAD_FOLDER, EXPIRE_TIME
 
+if platform.platform().startswith('Windows'):
+    ALLOW_ORIGIN = 'http://localhost:8080'
+    MYSQL_PWD = 'Changeme_123'
+else:
+    ALLOW_ORIGIN = 'http://122.51.50.135'
+    MYSQL_PWD = os.environ.get("MYSQL_PWD")
+# ALLOW_ORIGIN = 'http://localhost:8080'
+# MYSQL_PWD = os.environ.get("MYSQL_PWD")
 
+executor = ThreadPoolExecutor(4)
 # auth = HTTPTokenAuth(scheme='JWT')
 # mc_client = Client(('localhost', 11211))
 app = Flask(__name__)
@@ -41,7 +43,6 @@ db = SQLAlchemy(app)
 @app.before_request
 def before_request():
     path = str(request.path)
-    print(path)
     if path in ['/login', '/register', '/is-user-exists']:
         return
     # if request.path == '/login' or request.path == '/register':
@@ -194,11 +195,17 @@ def load_excel_rows(file_path):
         yield row
 
 def _import_express_price(file_path):
-    for row in load_excel_rows(file_path):
-        data = ExpressPrice.query.filter_by(from_=row['from_'], to_=row['to_'], name=row['name']).first()
-        if not data:
-            db.session.add(ExpressPrice(**row))
-    db.session.commit()
+    try:
+        for row in load_excel_rows(file_path):
+            data = ExpressPrice.query.filter_by(from_=row['from_'], to_=row['to_'], name=row['name']).first()
+            if not data:
+                db.session.add(ExpressPrice(**row))
+        db.session.commit()
+    except Exception:
+        return False
+    finally:
+        os.remove(file_path)
+    return True
 
 # @admin_required
 @app.route('/import-express-price', methods=['POST'])
@@ -208,9 +215,12 @@ def import_express_price():
         return make_response('No file found.', 400)
     filename = secure_filename(express_price_file.filename)
     tmp_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    # tmp_file = filename
     express_price_file.save(tmp_file)
-    _import_express_price(tmp_file)
-    return make_response('Import express success.', 200)
+    # executor.submit(_import_express_price, tmp_file)
+    if _import_express_price(tmp_file):
+        return make_response('Parse express price success.', 200)
+    return make_response('Error occurs when parse express price.', 400)
 
 # @login_required
 @app.route('/query', methods=['POST'])
@@ -267,9 +277,7 @@ def register():
 @app.route('/is-user-exists', methods=['POST'])
 def is_user_exists():
     username = request.form.get('username')
-    print(username)
     user = Customer.query.filter_by(username=username).first()
-    print(user)
     if user:
         return make_response(jsonify({'isExists': True}))
     return make_response(jsonify({'isExists': False}))

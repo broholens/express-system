@@ -3,13 +3,29 @@
     <el-upload
       class="import-express-price"
       action="doUpload"
+      drag
       :before-upload="beforeUpload"
       :http-request="submitUpload"
       :limit="1">
-      <h2 v-if="ready" class="el-icon-circle-plus-outline"></h2>
+      <i class="el-icon-upload"></i>
       <h2 v-if="loading" class="el-icon-loading"></h2>
+      <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
     </el-upload>
+    <br>
+    <br>
+    <a class="download" download="" href="../../static/data/express_price.xlsx" target="_blank">下载模板</a>
   </div>
+  <!-- <div>
+    <el-upload
+      class="upload-demo"
+      drag
+      action="/import-express-price"
+      multiple>
+      <i class="el-icon-upload"></i>
+      <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+      <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div>
+    </el-upload>
+  </div> -->
 </template>
 <script>
   import { Message } from 'element-ui'
@@ -38,16 +54,19 @@
           headers: {'Content-Type': 'multipart/form-data'}
         }
         this.$axios.post('/import-express-price', fileFormData, requestConfig).then((response) => {
-          this.ready = true;
           this.loading = false;
           if (response.status === 200) {
             this.$message({
-              message: '操作成功',
+              message: '上传成功',
               type: 'success'
+            })
+          }else {
+            this.$message({
+              message: '解析失败, 请检查文件格式',
+              type: 'error'
             })
           }
         })
-        this.ready = false;
         this.loading = true;
       }
     }
