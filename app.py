@@ -50,16 +50,12 @@ def before_request():
     path = str(request.path)
     if path in ['/login', '/register', '/is-user-exists', '/generate-captcha-code']:
         return
-    # if request.path == '/login' or request.path == '/register':
-    #     return
     # https://segmentfault.com/q/1010000012364132
     if request.method == 'OPTIONS':
         resp = app.make_default_options_response()
         resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With, token'
         resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
         resp.headers['Access-Control-Allow-Origin'] = ALLOW_ORIGIN
-        # resp.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080'
-        # resp.headers['Content-Type'] = 'text/plain'
         resp.headers['Access-Control-Allow-Credentials'] = 'true'
         return resp
     token = request.headers.get('token')
@@ -285,16 +281,18 @@ def is_user_exists():
     user = Customer.query.filter_by(username=username).first()
     if user:
         return make_response(jsonify({'isExists': True}))
-    return make_response(jsonify({'isExists': False})
+    return make_response(jsonify({'isExists': False}))
 
 @app.route('/generate-captcha-code', methods=['GET'])
 def generate_code():
     captcha_str = ''.join(random.sample(captcha_choices, 4))
-    hash_str = hashlib.sha256(captcha_str)
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(captcha_str.encode('utf-8'))
+    hash_str = sha256_hash.hexdigest()
     img = ImageCaptcha().generate_image(captcha_str)
-    # TODO: 加路径
-    img.save(hash_str+'.png')
-    return make_response(jsonify({'captcha': hash_str})
+    # TODO: 删除文件
+    img.save(os.path.join('front-end', 'static', 'tmp', hash_str+'.png'))
+    return make_response(jsonify({'captcha': hash_str}))
 
 if __name__ == '__main__':
     # db.session.execute(INIT_DB_SQL)

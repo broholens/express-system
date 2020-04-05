@@ -11,9 +11,9 @@
         <el-input type="password" v-model="ruleForm.checkPass" autocomplete="off"></el-input>
       </el-form-item>
       <el-form-item label="验证码" prop="captcha">
-        <el-input v-model="ruleForm.captcha" autocomplete="off" maxlength=4 style="float: left; width: 122px;"></el-input>
+        <el-input v-model="ruleForm.captcha" autocomplete="off" maxlength=4></el-input>
         <div>
-          <img src="" ref="code" @click="ChangeCode">
+          <img src="" ref="code" @click="changeCode">
         </div>
       </el-form-item>
       <el-form-item>
@@ -120,13 +120,14 @@
           this.captcha_code = response.data.captcha;
           this.$refs.code.setAttribute(
             "src",
-            "../../../"+this.captcha_code+'.png'
+            "../../static/tmp/"+this.captcha_code+'.png'
           )
         })
       },
       submitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
+            // TODO: 验证码文件删除
             this.regist();
           }
         });
