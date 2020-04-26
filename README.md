@@ -8,7 +8,7 @@ A simple express management system.
 
 ## TODO
 
-- [ ] 支持用户注册
+- [x] 支持用户注册
 - [ ] 添加welcome页面
 - [ ] token过期重定向到login界面
 - [ ] 查询价格时在前端对输入进行校验
